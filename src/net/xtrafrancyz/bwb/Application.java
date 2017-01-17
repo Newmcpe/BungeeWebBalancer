@@ -18,16 +18,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xtrafrancyz
  */
 public class Application implements HttpHandler, Runnable {
+    public Map<String, Host> hostnameCache = new HashMap<>();
     public List<Bungee> bungies = null;
     public Config config;
     
@@ -83,6 +87,52 @@ public class Application implements HttpHandler, Runnable {
                         Bungee b = new Bungee();
                         b.host = object.get("host").getAsString();
                         b.online = Integer.parseInt(object.get("players").getAsString().split("/")[0]);
+                        
+                        String hostname;
+                        String port = "";
+                        String[] split = b.host.split(":");
+                        if (split.length == 2) {
+                            hostname = split[0];
+                            if (!split[1].equals("25565"))
+                                port = ":" + split[1];
+                        } else {
+                            hostname = split[0];
+                        }
+                        
+                        Host host = hostnameCache.get(hostname);
+                        if (host == null || host.expire < System.currentTimeMillis())
+                            host = new Host(hostname, 10 * 60 * 1000);
+                        
+                        if (host.ips == null) {
+                            host.ips = new ArrayList<>();
+                            
+                            try {
+                                /*
+                                Hashtable<String, String> env = new Hashtable<>();
+                                env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+                                env.put("java.naming.provider.url", "dns:");
+                                env.put("com.sun.jndi.dns.timeout.retries", "1");
+                                DirContext ictx = new InitialDirContext(env);
+                                Attributes response = ictx.getAttributes(hostname, new String[]{"A"});
+                                Attribute a = response.get("a");
+                                for (int i = 0; i < a.size(); i++)
+                                    host.ips.add((String) a.get(i));
+                                */
+                                
+                                for (InetAddress addr : InetAddress.getAllByName(hostname))
+                                    host.ips.add(addr.getHostAddress());
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                host.ips.add(hostname);
+                            }
+                            
+                            hostnameCache.put(hostname, host);
+                        }
+                        if (!host.ips.isEmpty()) {
+                            b.host = host.ips.get(host.accessesCounter % host.ips.size()) + port;
+                            host.accessesCounter++;
+                        }
+                        
                         newList.add(b);
                     }
                     bungies = newList;
