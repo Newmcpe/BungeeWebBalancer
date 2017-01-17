@@ -93,6 +93,7 @@ public class Application implements HttpHandler, Runnable {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+                bungies = null;
             }
             try {
                 Thread.sleep(1000L);
