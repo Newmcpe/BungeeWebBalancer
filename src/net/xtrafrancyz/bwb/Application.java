@@ -32,14 +32,14 @@ import java.util.Map;
  */
 public class Application implements HttpHandler, Runnable {
     public Map<String, Host> hostnameCache = new HashMap<>();
-    public List<Bungee> bungies = null;
+    public List<Bungee> bungees = null;
     public Config config;
     
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
         String host;
-        List<Bungee> local = bungies;
+        List<Bungee> local = bungees;
         if (local == null || local.isEmpty()) {
             host = config._default;
         } else {
@@ -135,7 +135,7 @@ public class Application implements HttpHandler, Runnable {
                         
                         newList.add(b);
                     }
-                    bungies = newList;
+                    bungees = newList;
                 } finally {
                     if (in != null)
                         in.close();
@@ -143,7 +143,7 @@ public class Application implements HttpHandler, Runnable {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                bungies = null;
+                bungees = null;
             }
             try {
                 Thread.sleep(1000L);
