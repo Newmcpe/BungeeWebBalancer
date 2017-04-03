@@ -85,6 +85,11 @@ public class Application implements HttpHandler, Runnable {
                     for (JsonElement elem : arr) {
                         JsonObject object = elem.getAsJsonObject();
                         Bungee b = new Bungee();
+                        b.id = object.get("id").getAsString();
+                        
+                        if (config.ignoredBungees.contains(b.id))
+                            continue;
+                        
                         b.host = object.get("host").getAsString();
                         b.online = Integer.parseInt(object.get("players").getAsString().split("/")[0]);
                         
